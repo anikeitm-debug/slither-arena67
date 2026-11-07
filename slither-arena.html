@@ -49,6 +49,29 @@ button.g{background:linear-gradient(#ffe45c,#e6a100);box-shadow:0 5px 0 #4d3300}
 .sc button{margin-top:8px;font-size:15px}
 .arr{position:absolute;top:45%;width:42px;height:42px;padding:0;border-radius:50%;z-index:2;margin:0}
 html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+*{scrollbar-width:none}*::-webkit-scrollbar{display:none}
+.bx{font-size:84px;line-height:150px}
+@media (max-height:520px),(max-width:640px){
+ h1{font-size:26px;-webkit-text-stroke:2px #000;text-shadow:0 3px 0 #000,0 0 18px var(--a)}
+ #pt{font-size:20px!important}
+ .card{padding:10px 14px;border-radius:14px;max-height:96vh}
+ button{padding:8px 10px;font-size:13px;margin-top:6px;border-width:2px;box-shadow:0 3px 0 #05223f}
+ input,select{padding:7px 10px;font-size:14px;margin-bottom:5px}input[type=color]{height:34px}
+ .pill{font-size:11px;padding:2px 8px;margin-bottom:4px}.info,.sub{font-size:11px;margin-top:4px;margin-bottom:4px}
+ #menu .card{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:min(560px,96vw);align-items:center}
+ #menu .card>h1,#menu .card>div:nth-of-type(1),#menu #bDaily,#menu .info{grid-column:1/-1}
+ #menu .card button{margin-top:0}
+ #serverList{max-height:110px;margin:6px 0}.server-item{padding:6px 10px}
+ .card.wide{width:98vw}.cur{font-size:13px;margin-bottom:4px}.tabs{margin-bottom:2px}.tabs button{padding:6px 4px;font-size:12px}
+ .car{gap:10px;padding:6px 4px 8px}
+ .sc{flex-basis:min(190px,44vw);padding:8px;border-radius:14px;box-shadow:0 4px 0 #000,0 0 14px var(--rc);outline-offset:-7px}
+ .sc .nm2{font-size:15px}.sc button{padding:7px;font-size:12px;margin-top:4px}.sc .rb{font-size:10px}.sc canvas{margin:2px 0}
+ .bx{font-size:56px;line-height:96px}.sc .sub{display:none}
+ .arr{width:34px;height:34px;top:40%}.carw+.info{display:none}
+ .it{padding:5px 8px;margin-bottom:4px}.av{width:32px;height:32px;line-height:32px;font-size:18px}
+ #big{font-size:22px}#hud{top:8px;left:10px;font-size:12px}
+ .joystick-zone{width:100px;height:100px;bottom:16px;left:16px}.boost-btn{width:68px;height:68px;font-size:12px;bottom:22px;right:16px}
+}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="big">0</div><small id="roomLbl"></small><small id="hc"></small></div>
@@ -308,16 +331,16 @@ function draw(t){
  g.fillStyle='#fff';
  for(const d of dust){const x=((d.x-cam.x*cam.z*d.k)%W+W)%W,y=((d.y-cam.y*cam.z*d.k)%H+H)%H;g.globalAlpha=.12+d.r*.04;g.beginPath();g.arc(x,y,d.r,0,6.3);g.fill()}
  g.globalAlpha=1;hud(all)}
-function hud(all){
+function hud(all){const U=Math.max(.62,Math.min(1,H/560)),W2=W/U,H2=H/U;g.save();g.scale(U,U);
  const lb=all.slice().sort((a,b)=>b.len-a.len).slice(0,6);
  g.textAlign='left';g.font='700 14px system-ui';
- g.fillStyle='rgba(10,14,28,.6)';g.fillRect(W-190,10,180,28+lb.length*20);
- g.fillStyle='#8fa0c8';g.fillText('LEADERBOARD',W-180,30);
- lb.forEach((s,i)=>{g.fillStyle=s===me?'#00e5ff':'#eaf0ff';g.textAlign='left';g.fillText((i+1)+'. '+(s.name||'?').slice(0,11),W-180,52+i*20);g.textAlign='right';g.fillText(Math.floor(s.len),W-18,52+i*20)});
+ g.fillStyle='rgba(10,14,28,.6)';g.fillRect(W2-190,10,180,28+lb.length*20);
+ g.fillStyle='#8fa0c8';g.fillText('LEADERBOARD',W2-180,30);
+ lb.forEach((s,i)=>{g.fillStyle=s===me?'#00e5ff':'#eaf0ff';g.textAlign='left';g.fillText((i+1)+'. '+(s.name||'?').slice(0,11),W2-180,52+i*20);g.textAlign='right';g.fillText(Math.floor(s.len),W2-18,52+i*20)});
  g.textAlign='left';
- const mr=58,mx=W-mr-14,my=H-mr-14;
+ const mr=58,mx=W2-mr-14,my=H2-mr-14;
  g.fillStyle='rgba(10,14,28,.65)';g.beginPath();g.arc(mx,my,mr,0,6.3);g.fill();g.strokeStyle='#ff2d55';g.lineWidth=2;g.stroke();
- for(const s of all){g.fillStyle=s===me?'#fff':s.sk.a;g.beginPath();g.arc(mx+s.x/R*mr,my+s.y/R*mr,s===me?3.5:2,0,6.3);g.fill()}}
+ for(const s of all){g.fillStyle=s===me?'#fff':s.sk.a;g.beginPath();g.arc(mx+s.x/R*mr,my+s.y/R*mr,s===me?3.5:2,0,6.3);g.fill()}g.restore()}
 
 let last=0,acc=0;
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-(last||t));last=t;
@@ -370,7 +393,7 @@ const BOXES=[{id:'b1',n:'Mystery Box',c:300,cur:'c',ic:'📦',rc:'#3fa9ff',d:'Ra
 const sCard=k=>{const [rn,rc]=RAR(k),own=SV.owned.includes(k.id),sel=SV.sel===k.id;
  const btn=own?`<button class="${sel?'g':''}" data-a="eq" data-v="${k.id}">${sel?'✔ Equipped':'Equip'}</button>`:`<button data-a="buy" data-v="${k.id}">${k.gm?'💎 '+k.gm:'🪙 '+k.pr}</button>`;
  return `<div class="sc" style="--rc:${rc}"><div class="rb">${rn}</div><canvas class="pc" data-id="${k.id}" width="260" height="150"></canvas><div class="nm2">${esc(k.n)}</div>${btn}</div>`};
-const bCard=b=>`<div class="sc" style="--rc:${b.rc}"><div class="rb">Box</div><div style="font-size:84px;line-height:150px">${b.ic}</div><div class="nm2">${b.n}</div><div class="sub">${b.d}</div><button data-a="box" data-v="${b.id}">${b.cur==='g'?'💎 ':'🪙 '}${b.c}</button></div>`;
+const bCard=b=>`<div class="sc" style="--rc:${b.rc}"><div class="rb">Box</div><div class="bx">${b.ic}</div><div class="nm2">${b.n}</div><div class="sub">${b.d}</div><button data-a="box" data-v="${b.id}">${b.cur==='g'?'💎 ':'🪙 '}${b.c}</button></div>`;
 function shopHTML(){
  if(revId){const k=skinOf(revId),[rn,rc]=RAR(k);return `<div class="sc" style="--rc:${rc};margin:0 auto;max-width:300px"><div class="rb">${rn}</div><canvas class="pc" data-id="${k.id}" width="260" height="150"></canvas><div class="nm2">${esc(k.n)}</div><div class="sub">Unlocked and equipped!</div><button data-a="ok">Awesome!</button></div>`}
  const tabs=[['skins','🎨 Skins'],['prem','💎 Premium'],['box','🎁 Boxes']].map(t=>`<button class="${shopTab===t[0]?'g':'x'}" data-a="tab" data-v="${t[0]}">${t[1]}</button>`).join('');
