@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Slither Arena</title>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#0b0f1a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+:root{color-scheme:dark;--bg:#0b0f1a;--card:#141b2e;--ink:#eaf0ff;--mut:#8fa0c8;--a:#00e5ff;--b:#ff3d81;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.55);z-index:5}
+.ov.hide,.hide{display:none}
+.card{background:var(--card);border:1px solid #26314f;border-radius:18px;padding:22px 26px;width:min(420px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:92vh;overflow:auto}
+h1{margin:0 0 4px;font-size:42px;font-weight:900;letter-spacing:2px;color:#fff;-webkit-text-stroke:3px #000;paint-order:stroke fill;text-shadow:0 5px 0 #000,0 0 28px var(--a)}
+#menu{background:rgba(5,8,16,.1)}#menu .card{background:none;border:0;box-shadow:none}
+.sub{color:var(--mut);font-size:13px;margin-bottom:10px}
+input,select{width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid #2c3a60;background:#0d1426;color:var(--ink);font-size:16px;text-align:center;outline:none;margin-bottom:8px}
+input:focus{border-color:var(--a)}input[type=color]{height:44px;padding:3px}
+button{font:inherit;cursor:pointer;border:3px solid #000;border-radius:10px;padding:13px 16px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#fff;text-shadow:0 2px 0 #000,0 0 6px #000;background:linear-gradient(#37d7ff,#0a78d6);box-shadow:0 5px 0 #05223f,0 0 18px rgba(0,200,255,.45);width:100%;margin-top:10px;font-size:16px;transition:transform .12s}
+button:hover{transform:translateY(-2px) scale(1.03)}button:active{transform:translateY(3px);box-shadow:0 2px 0 #05223f}
+button.d{background:linear-gradient(#ff7ab0,#d6196a);box-shadow:0 5px 0 #4a0526,0 0 18px rgba(255,60,140,.5)}
+button.g{background:linear-gradient(#ffe45c,#e6a100);box-shadow:0 5px 0 #4d3300}
+.row{display:flex;gap:8px}.row button,.row input{margin-top:0}
+.info{font-size:12px;color:var(--mut);margin-top:12px;line-height:1.5}
+.pill{display:inline-block;background:#0d1426;border:1px solid #2c3a60;border-radius:99px;padding:4px 12px;font-size:13px;color:var(--a);margin:0 3px 6px;font-weight:700}
+#serverList{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;margin:12px 0}
+.server-item{background:#0d1426;border:1px solid #2c3a60;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.server-item:hover{border-color:var(--a)}.server-name{font-weight:700;font-size:15px}
+.server-players{font-size:12px;color:var(--mut);background:#141b2e;padding:2px 8px;border-radius:99px}
+.it{display:flex;align-items:center;gap:8px;background:#0d1426;border:1px solid #2c3a60;border-radius:10px;padding:8px 10px;margin-bottom:6px;text-align:left}
+.it b{flex:1;font-size:14px}.pv{width:54px;height:14px;border-radius:8px}
+.it button{width:auto;margin:0;padding:6px 10px;font-size:11px;border-width:2px;box-shadow:0 3px 0 #05223f}
+.av{display:inline-block;width:40px;height:40px;font-size:22px;border-radius:10px;cursor:pointer;border:2px solid transparent;line-height:40px}.av.on{border-color:var(--a);background:#0d1426}
+#hud{position:fixed;left:14px;top:12px;z-index:3;font-weight:700;pointer-events:none;text-shadow:0 2px 6px #000}
+#hud small{display:block;color:var(--mut);font-weight:500}#big{font-size:30px}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#141b2e;border:1px solid var(--a);padding:8px 16px;border-radius:99px;z-index:9;font-weight:700;font-size:14px;pointer-events:none}
+.mobile-controls{position:fixed;inset:0;pointer-events:none;z-index:4}
+.joystick-zone{position:absolute;bottom:25px;left:25px;width:120px;height:120px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);border-radius:50%;pointer-events:auto;touch-action:none}
+.joystick-knob{position:absolute;top:50%;left:50%;width:50px;height:50px;margin:-25px 0 0 -25px;background:radial-gradient(circle,var(--a),#0a78d6);border:2px solid #fff;border-radius:50%;pointer-events:none}
+.boost-btn{position:absolute;bottom:35px;right:25px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,#ff7ab0,#d6196a);border:3px solid #fff;color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:none}
+.boost-btn:active{transform:scale(.92)}
+#pn{background:rgba(5,8,16,.35)}.card.wide{width:min(940px,96vw)}#pn .card{touch-action:pan-y}
+.tabs{display:flex;gap:8px;margin-bottom:6px}.tabs button{margin:0;padding:9px 6px;font-size:13px}.tabs .x{opacity:.6}
+.cur{font-weight:800;font-size:16px;margin-bottom:8px}.carw{position:relative}
+.car{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px 6px 16px;touch-action:pan-x;scrollbar-width:none;cursor:grab}
+.car::-webkit-scrollbar{display:none}
+.sc{flex:0 0 min(270px,74vw);scroll-snap-align:center;border-radius:20px;border:4px solid #000;padding:12px;background:linear-gradient(#22315c,#0d1426);box-shadow:0 7px 0 #000,0 0 22px var(--rc);outline:3px solid var(--rc);outline-offset:-9px;text-align:center}
+.sc .rb{font-weight:900;font-size:12px;letter-spacing:2px;color:var(--rc);text-transform:uppercase}
+.sc canvas{width:100%;height:auto;display:block;margin:6px 0}.sc .nm2{font-size:20px;font-weight:900;text-shadow:0 2px 0 #000}
+.sc button{margin-top:8px;font-size:15px}
+.arr{position:absolute;top:45%;width:42px;height:42px;padding:0;border-radius:50%;z-index:2;margin:0}
+html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud" class="hide"><div id="big">0</div><small id="roomLbl"></small><small id="hc"></small></div>
+<div id="controls" class="mobile-controls hide"><div class="joystick-zone" id="joyZone"><div class="joystick-knob" id="joyKnob"></div></div><div class="boost-btn" id="joyBoost">BOOST</div></div>
+<div id="toast" class="hide"></div>
+
+<div id="menu" class="ov"><div class="card">
+<h1>SLITHER ARENA</h1>
+<div><span id="chipP" class="pill"></span><span id="chipC" class="pill"></span></div>
+<button id="bSolo">▶ Solo (Bots)</button>
+<button id="bServers" class="d">🌐 Multiplayer</button>
+<div class="row"><button id="bShop" class="g">🛒 Shop</button><button id="bSkins">🎨 Skins</button></div>
+<div class="row"><button id="bProf">👤 Profile</button><button id="bRed">🎟 Redeem</button></div>
+<button id="bDaily" class="g"></button>
+<div class="info" id="best"></div>
+</div></div>
+
+<div id="serverp" class="ov hide"><div class="card">
+<h1 style="font-size:32px">SERVERS</h1><div class="sub">Join a server or create your own</div>
+<div id="serverList"></div>
+<input id="customName" maxlength="16" placeholder="Custom server name">
+<button id="bCreate" class="d">➕ Create Server</button>
+<button id="sBack" class="g">Back</button>
+</div></div>
+
+<div id="pn" class="ov hide"><div class="card"><h1 id="pt" style="font-size:30px"></h1><div id="pb" style="margin-top:10px"></div><button id="pBack" class="g">Back</button></div></div>
+
+<div id="over" class="ov hide"><div class="card">
+<h1 id="ot" style="font-size:34px">YOU POPPED</h1><div class="sub" id="os"></div>
+<button id="oAgain">Play again</button><button id="oMenu" class="g">Main menu</button>
+</div></div>
+
+<script>
+const SERVER_URL='';// set to 'wss://your-game.onrender.com' only if you package it as an APK
+const $=id=>document.getElementById(id),cv=$('c'),g=cv.getContext('2d');
+let W,H,DPR=Math.min(devicePixelRatio||1,1.5);
+function rs(){W=innerWidth;H=innerHeight;cv.width=W*DPR|0;cv.height=H*DPR|0}rs();addEventListener('resize',rs);
+const SP=6,rnd=(a,b)=>a+Math.random()*(b-a),rad=l=>7+Math.min(l,400)*.022,angd=d=>Math.atan2(Math.sin(d),Math.cos(d));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NAMES=['Viper','Noodle','Mamba','Zig','Coil','Slinky','Cobra','Pixel','Rattle','Python','Wiggle','Boa','Ninja','Comet','Blaze','Fang','Jelly','Nova','Rex','Luna'];
+
+/* ---------- save data (local, no account) ---------- */
+const SV={coins:100,gems:0,name:'Player'+(100+Math.random()*900|0),av:'🐍',owned:['s0','s1','s2','s3'],sel:'s0',custom:[],codes:[],daily:'',best:0};
+try{Object.assign(SV,JSON.parse(localStorage.getItem('sa_save3')||'{}'))}catch(e){}
+let dirty=0;const save=()=>{dirty=0;try{localStorage.setItem('sa_save3',JSON.stringify(SV))}catch(e){}refreshTop()};
+const K=(id,n,a,b,p,pr,gm)=>({id,n,a,b,p,pr,gm});
+const SKINS=[K('s0','Flamingo','#ff3d81','#ffb3d1','dash',0),K('s1','Cyan','#00e5ff','#0077a8','dash',0),K('s2','Lime','#7cfc00','#2e7d00','dash',0),K('s3','Sunset','#ffd600','#ff6d00','dash',0),
+K('s4','Violet','#b388ff','#5a2bc4','dash',150),K('s5','Ghost','#ffffff','#607d8b','dash',150),K('s6','Zebra','#ffffff','#111111','stripe',400),K('s7','Lava','#ff5722','#7f0000','stripe',500),
+K('s8','Polka','#ff80ab','#880e4f','dot',600),K('s9','Toxic','#76ff03','#1b5e20','dot',800),
+K('s10','Ocean','#00b4d8','#03045e','stripe',250),K('s11','Mint','#a8ffd9','#00a86b','dot',300),K('s12','Bubblegum','#ff9de2','#7b2ff7','stripe',350),K('s13','Ember','#ffb347','#c0392b','dash',200),
+K('s14','Midnight','#2c3e50','#00e5ff','dot',450),K('s15','Venom','#39ff14','#000000','stripe',700),K('s16','Sakura','#ffc1d9','#ff4f9a','dot',650),K('s17','Ice','#e0f7ff','#4fc3f7','dash',300),
+K('s18','Magma','#ffeb3b','#d50000','stripe',900),K('s19','Neon Pink','#ff00cc','#3300ff','dash',500),K('s20','Pumpkin','#ff9800','#212121','stripe',550),K('s21','Jungle','#66bb6a','#1b5e20','dot',400),
+K('g1','Rainbow','#ff0000','#0000ff','rainbow',0,25),K('g2','Gold','#ffd700','#b8860b','stripe',0,15),K('g3','Galaxy','#7c4dff','#00e5ff','dot',0,20),K('g4','Candy','#ff4081','#ffffff','stripe',0,10),
+K('g5','Diamond','#b9f2ff','#00bcd4','dot',0,30),K('g6','Shadow','#212121','#7c4dff','stripe',0,12),K('g7','Emerald','#00e676','#004d40','dot',0,18),K('g8','Royal','#7c4dff','#ffd700','stripe',0,22),
+K('g9','Plasma','#00ffea','#ff00e6','dash',0,28),K('g10','Prism','#ffffff','#00e5ff','rainbow',0,40)];
+const skinOf=id=>SKINS.find(k=>k.id===id)||SV.custom.find(k=>k.id===id)||SKINS[0];
+const RAR=k=>{const v=k.gm?k.gm*40:k.pr;return v>=1000?['Legendary','#ffb300']:v>=600?['Epic','#b44cff']:v>=300?['Rare','#3fa9ff']:['Common','#9aa7c7']};
+const mySkin=()=>{const k=skinOf(SV.sel);return{a:k.a,b:k.b,p:k.p}};
+const myName=()=>SV.av+' '+SV.name;
+const CODES={WELCOME:{c:500},GEMS:{g:25},SLITHER:{c:250,g:10},ARENA:{c:1000},SNAKE100:{c:100},RICH:{c:2500,g:50}};
+const AV=['🐍','🐉','🦎','🐲','👾','🔥','⭐','👑','💀','🤖','🦄','🐸'];
+
+/* ---------- state ---------- */
+let state='menu',online=false,R=2000,me,snakes=[],food=new Map(),remotes=new Map(),run={c:0,gain:0,gems:0},eatQ=[];
+let pt=[],shake=0,dust=null;
+let cam={x:0,y:0,z:1},mouse={x:0,y:0},boost=false,joyActive=false,joyAngle=0,frame=0,fidc=1,myId=null,ws=null,q=[],lobbyT=0;
+const show=(id,v)=>$(id).classList.toggle('hide',!v);
+let tT=0;function toast(t){const e=$('toast');e.textContent=t;show('toast',1);clearTimeout(tT);tT=setTimeout(()=>show('toast',0),2200)}
+
+/* ---------- snakes ---------- */
+function reseg(s){s.seg=[];const n=Math.floor(s.len);for(let i=0;i<n;i++)s.seg.push({x:s.x-Math.cos(s.a)*i*SP,y:s.y-Math.sin(s.a)*i*SP})}
+function mk(x,y,a,sk,name,bot,len){const s={x,y,a,ta:a,sk,name,bot,len,seg:[],boost:false,alive:true,r:rad(len),th:0};reseg(s);return s}
+function addBot(){const a=rnd(0,6.28),d=rnd(0,R*.8),k=SKINS[(Math.random()*10)|0];
+ snakes.push(mk(Math.cos(a)*d,Math.sin(a)*d,rnd(0,6.28),{a:k.a,b:k.b,p:k.p},NAMES[(Math.random()*NAMES.length)|0],true,rnd(10,40)|0))}
+function addF(x,y,v,h,gem,key,sid){const f={id:key||('l'+fidc++),sid,x,y,v,g:gem,r:gem?8:v>=2?7:v>1?6:4.5,c:gem?'#ff4df0':'hsl('+h+',90%,60%)'};food.set(f.id,f)}
+function spawnFood(n){for(let i=0;i<n;i++){const a=rnd(0,6.28),d=Math.sqrt(Math.random())*(R-40),gem=Math.random()<.02;addF(Math.cos(a)*d,Math.sin(a)*d,gem?3:Math.random()<.12?2:1,(Math.random()*360)|0,gem)}}
+function chain(s){
+ const n=Math.floor(s.len);
+ while(s.seg.length<n){const t=s.seg[s.seg.length-1];s.seg.push({x:t.x,y:t.y})}
+ while(s.seg.length>n&&s.seg.length>3)s.seg.pop();
+ s.seg[0].x=s.x;s.seg[0].y=s.y;
+ for(let i=1;i<s.seg.length;i++){const p=s.seg[i-1],q=s.seg[i],dx=p.x-q.x,dy=p.y-q.y,dd=Math.hypot(dx,dy);if(dd>SP){q.x+=dx/dd*(dd-SP);q.y+=dy/dd*(dd-SP)}}
+ s.r=rad(s.len)}
+function move(s){
+ const tr=0.085-Math.min(s.len,300)*0.00015;
+ s.a+=Math.max(-tr,Math.min(tr,angd(s.ta-s.a)));
+ const b=s.boost&&s.len>14,sp=b?3.8:2.1;
+ if(b){s.len-=0.07;if(!online&&Math.random()<.25&&s.seg.length>3){const t=s.seg[s.seg.length-1];addF(t.x,t.y,.5,0,0);const f=food.get('l'+(fidc-1));if(f)f.c=s.sk.a}}
+ s.x+=Math.cos(s.a)*sp;s.y+=Math.sin(s.a)*sp;chain(s)}
+function reward(f){run.c+=f.v*.25;while(run.c>=1){run.c--;SV.coins++;run.gain++}if(f.g){SV.gems++;run.gems++}dirty=1}
+function eat(s){
+ for(const f of food.values()){const dx=f.x-s.x,dy=f.y-s.y,rr=s.r+f.r+(s===me?10:6);
+  if(dx*dx+dy*dy<rr*rr){s.len+=f.v*.5;food.delete(f.id);
+   if(s===me){reward(f);burst(f.x,f.y,f.c,f.g?16:5,2.4);if(online&&f.sid)eatQ.push(f.sid)}else if(!online&&food.size<300)spawnFood(1)}}}
+function burst(x,y,c,n,sp){for(let i=0;i<n&&pt.length<350;i++){const a=rnd(0,6.28),v=rnd(.5,1)*sp;pt.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:rnd(18,40)|0,m:40,c,r:rnd(2,4.5)})}}
+function die(s){
+ if(!s.alive)return;s.alive=false;burst(s.x,s.y,s.sk.a,34,4.5);burst(s.x,s.y,s.sk.b,20,3);if(s===me)shake=16;
+ if(s===me&&online){const d=[];for(let i=0;i<s.seg.length&&d.length<60;i+=Math.max(2,s.seg.length/60|0))d.push([Math.round(s.seg[i].x+rnd(-8,8)),Math.round(s.seg[i].y+rnd(-8,8))]);tx({t:'d',d})}
+ else if(!online)for(let i=0;i<s.seg.length;i+=2)addF(s.seg[i].x+rnd(-8,8),s.seg[i].y+rnd(-8,8),1.5,(Math.random()*360)|0,0);
+ if(s===me)setTimeout(()=>endGame(),900);
+ else if(s.bot&&!online)setTimeout(()=>{snakes=snakes.filter(o=>o!==s);if(state!=='menu')addBot()},2500)}
+const others=()=>snakes.concat([...remotes.values()]);
+function think(s){
+ s.th++;if(s.th%13)return;
+ if(Math.hypot(s.x,s.y)>R-260){s.ta=Math.atan2(-s.y,-s.x);s.boost=false;return}
+ for(const o of others()){if(o===s||!o.alive)continue;
+  for(let j=0;j<o.seg.length;j+=3){const dx=o.seg[j].x-s.x,dy=o.seg[j].y-s.y,lim=90+o.r*2;
+   if(dx*dx+dy*dy<lim*lim){const df=angd(Math.atan2(dy,dx)-s.a);if(Math.abs(df)<1.3){s.ta=s.a-Math.sign(df||1)*1.4;s.boost=false;return}}}}
+ let best=1e9,bf=null;
+ for(const f of food.values()){const dx=f.x-s.x,dy=f.y-s.y,dd=dx*dx+dy*dy;if(dd<best){best=dd;bf=f}}
+ if(bf)s.ta=Math.atan2(bf.y-s.y,bf.x-s.x);
+ s.boost=false}
+
+/* ---------- remote snakes: extrapolate + smooth ---------- */
+function getR(id){let r=remotes.get(id);
+ if(!r){r=mk(0,0,0,{a:'#00e5ff',b:'#0077a8',p:'dash'},'Player',false,14);r.id=id;r.tx=r.ty=0;r.fresh=1;r.t=performance.now();remotes.set(id,r)}return r}
+function stepRemote(r,now){
+ const age=Math.min(now-r.t,150)/1000,sp=(r.boost?3.8:2.1)*60;
+ const px=r.tx+Math.cos(r.ta)*sp*age,py=r.ty+Math.sin(r.ta)*sp*age,dx=px-r.x,dy=py-r.y;
+ if(dx*dx+dy*dy>90000){r.x=px;r.y=py}else{r.x+=dx*.3;r.y+=dy*.3}
+ r.a+=angd(r.ta-r.a)*.3;chain(r)}
+
+/* ---------- networking ---------- */
+const tx=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
+function lobbyMsg(h){$('serverList').innerHTML='<div style="color:var(--mut);padding:10px;font-size:13px">'+h+'</div>'}
+function netOpen(cb){
+ if(location.protocol==='file:'&&!SERVER_URL){lobbyMsg('Open the game through the Node server: run <b>npm start</b>, then visit <b>http://localhost:3000</b>');return}
+ if(ws&&ws.readyState===1)return cb&&cb();
+ if(ws&&ws.readyState===0){q.push(cb);return}
+ q=[cb];const w=ws=new WebSocket(SERVER_URL||((location.protocol==='https:'?'wss://':'ws://')+location.host));
+ w.onopen=()=>{const a=q;q=[];a.forEach(f=>f&&f())};
+ w.onmessage=onMsg;w.onerror=()=>{};
+ w.onclose=()=>{if(ws!==w)return;ws=null;clearInterval(lobbyT);
+  if(state==='play'&&online)endGame('DISCONNECTED');
+  if(!$('serverp').classList.contains('hide'))lobbyMsg('Cannot reach the server. Make sure <b>npm start</b> is running (or your host supports WebSockets).')}}
+function onMsg(e){
+ let m;try{m=JSON.parse(e.data)}catch(x){return}
+ switch(m.t){
+ case 'room_list':{const l=$('serverList');l.innerHTML='';
+  m.rooms.forEach(r=>{const d=document.createElement('div');d.className='server-item';
+   d.innerHTML=`<div class="server-name">🌐 ${esc(r.name)}</div><div class="server-players">👥 ${r.players}/${r.max}</div>`;
+   d.onclick=()=>{clearInterval(lobbyT);tx({t:'join_room',roomId:r.id,n:myName(),sk:mySkin()})};l.appendChild(d)});break}
+ case 'joined':
+  clearInterval(lobbyT);keepAwake();online=true;myId=m.id;R=m.R;food=new Map();remotes.clear();
+  for(const p of m.players){const r=getR(p.id);r.name=p.n;r.sk=p.sk}
+  for(const f of m.food)addF(f[1],f[2],f[4],f[3],f[5],'s'+f[0],f[0]);
+  newMe();snakes=[me];state='play';$('roomLbl').textContent=m.name;
+  ['menu','serverp','pn','over'].forEach(i=>show(i,0));show('hud',1);show('controls',1);break;
+ case 'pj':{const r=getR(m.id);r.name=m.n;r.sk=m.sk;break}
+ case 'st':
+  for(const p of m.p){if(p[0]===myId)continue;const r=getR(p[0]);r.tx=p[1];r.ty=p[2];r.ta=p[3];r.len=p[4];r.boost=!!p[5];r.t=performance.now();
+   if(r.fresh){r.x=p[1];r.y=p[2];r.a=p[3];reseg(r);r.fresh=0}}
+  if(m.fa)for(const f of m.fa)addF(f[1],f[2],f[4],f[3],f[5],'s'+f[0],f[0]);
+  if(m.fr)for(const i of m.fr)food.delete('s'+i);break;
+ case 'pd':case 'pl':remotes.delete(m.id);break;
+ case 'err':toast(m.m)}}
+
+/* ---------- game flow ---------- */
+function newMe(){run={c:0,gain:0,gems:0};eatQ=[];const a=rnd(0,6.28),d=rnd(0,R*.6);
+ me=mk(Math.cos(a)*d,Math.sin(a)*d,rnd(0,6.28),mySkin(),myName(),false,14);me.alive=true;cam.x=me.x;cam.y=me.y;cam.z=1}
+function startSolo(){keepAwake();
+ online=false;state='play';food=new Map();snakes=[];remotes.clear();R=2000;newMe();snakes.push(me);spawnFood(250);for(let i=0;i<18;i++)addBot();
+ $('roomLbl').textContent='Solo Mode';['menu','serverp','pn','over'].forEach(i=>show(i,0));show('hud',1);show('controls',1)}
+function endGame(msg){
+ if(state!=='play')return;state='over';show('hud',0);show('controls',0);
+ const sc=Math.floor(me.len),bonus=Math.floor(sc/4);SV.coins+=bonus;run.gain+=bonus;if(sc>SV.best)SV.best=sc;save();
+ $('ot').textContent=msg||'YOU POPPED';
+ $('os').textContent='Length '+sc+' · Best '+SV.best+' · +'+run.gain+' 🪙'+(run.gems?' +'+run.gems+' 💎':'');show('over',1)}
+function toMenu(){
+ if(ws&&online)tx({t:'leave'});if(ws){ws.close();ws=null}online=false;state='menu';
+ ['over','serverp','pn','hud','controls'].forEach(i=>show(i,0));show('menu',1);refreshTop()}
+$('oAgain').onclick=()=>{
+ if(online&&ws&&ws.readyState===1){tx({t:'spawn',n:myName(),sk:mySkin()});newMe();snakes=[me];state='play';show('over',0);show('hud',1);show('controls',1)}
+ else if(online)toMenu();else startSolo()};
+$('oMenu').onclick=toMenu;
+
+function step(){
+ frame++;
+ me.ta=joyActive?joyAngle:Math.atan2(mouse.y-H/2,mouse.x-W/2);me.boost=boost;
+ for(const s of snakes)if(s.alive){if(s.bot)think(s);move(s);eat(s)}
+ const now=performance.now();
+ for(let i=pt.length-1;i>=0;i--){const q=pt[i];q.x+=q.vx;q.y+=q.vy;q.vx*=.94;q.vy*=.94;if(--q.l<=0)pt.splice(i,1)}
+ if(me.alive&&me.boost&&me.len>14&&frame%2===0){const t2=me.seg[me.seg.length-1];burst(t2.x,t2.y,me.sk.a,1,.8)}
+ if(shake>0)shake*=.9;
+ if(online)for(const [id,r] of remotes){if(now-r.t>3000){remotes.delete(id);continue}stepRemote(r,now)}
+ const all=others();
+ for(const s of snakes){if(!s.alive)continue;
+  if(Math.hypot(s.x,s.y)>R-s.r){die(s);continue}
+  for(const o of all){if(o===s||!o.alive)continue;
+   const lim=o.r+s.r*.6,l2=lim*lim;
+   for(let j=1;j<o.seg.length;j+=2){const dx=o.seg[j].x-s.x,dy=o.seg[j].y-s.y;if(dx*dx+dy*dy<l2){die(s);break}}
+   if(!s.alive)break}}
+ if(online&&me.alive&&frame%3===0)tx({t:'u',x:Math.round(me.x),y:Math.round(me.y),a:+me.a.toFixed(2),l:Math.round(me.len*10)/10,b:me.boost&&me.len>14?1:0,e:eatQ.splice(0)});
+ if(frame%10===0){$('big').textContent=Math.floor(me.len);$('hc').textContent='🪙 '+Math.floor(SV.coins)+'  💎 '+SV.gems}
+ if(dirty&&frame%90===0)save()}
+
+/* ---------- render ---------- */
+let HP=null;
+function hexPat(){if(HP)return HP;const c=document.createElement('canvas');c.width=87;c.height=150;const x=c.getContext('2d'),s=50,w=Math.sqrt(3)*s,v=1.5*s;
+ x.scale(87/w,150/(2*v));x.lineWidth=2;x.strokeStyle='rgba(110,150,255,.22)';
+ for(let r=-1;r<=2;r++)for(let k=-1;k<=2;k++){const cx=k*w+(r&1?w/2:0),cy=r*v;x.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;x.lineTo(cx+Math.cos(a)*(s-2),cy+Math.sin(a)*(s-2))}x.closePath();
+  x.fillStyle='rgba(70,100,200,'+(.05+(((r&1)*2+(k&1))&3)*.025)+')';x.fill();x.stroke()}
+ return HP=g.createPattern(c,'repeat')}
+function drawSnake(s,c){
+ c=c||g;const n=s.seg.length,sk=s.sk,r=s.r,bst=s.boost&&s.len>14;
+ const P=(a,b)=>{c.beginPath();c.moveTo(s.seg[a].x,s.seg[a].y);for(let i=a+1;i<=b;i++)c.lineTo(s.seg[i].x,s.seg[i].y)};
+ c.lineCap='round';c.lineJoin='round';
+ P(0,n-1);c.strokeStyle=sk.b;c.globalAlpha=bst?.35:.2;c.lineWidth=r*(bst?3.6:2.9);c.stroke();
+ c.globalAlpha=1;c.lineWidth=r*2.15;c.stroke();
+ if(sk.p==='rainbow'){for(let i=0;i<n-1;i+=3){P(i,Math.min(i+3,n-1));c.strokeStyle='hsl('+((i*9)%360)+',90%,60%)';c.lineWidth=r*1.75;c.stroke()}}
+ else{c.strokeStyle=sk.a;c.lineWidth=r*1.75;c.stroke();
+  if(sk.p==='dash'){c.setLineDash([SP*2.2,SP*2.2]);c.strokeStyle='rgba(255,255,255,.22)';c.lineWidth=r*1.1;c.stroke()}
+  else if(sk.p==='stripe'){c.setLineDash([SP*2.5,SP*2.5]);c.strokeStyle=sk.b;c.lineWidth=r*1.75;c.stroke()}
+  else if(sk.p==='dot'){c.setLineDash([.1,SP*2.2]);c.strokeStyle=sk.b;c.lineWidth=r*.9;c.stroke()}
+  c.setLineDash([])}
+ const h=s.seg[0],er=r*.46,look=s.ta!==undefined?s.ta:s.a;
+ for(const sd of[-1,1]){
+  const ox=h.x+Math.cos(s.a+sd*.8)*r*.55,oy=h.y+Math.sin(s.a+sd*.8)*r*.55;
+  c.fillStyle='#fff';c.beginPath();c.arc(ox,oy,er,0,6.3);c.fill();
+  const px=ox+Math.cos(look)*er*.45,py=oy+Math.sin(look)*er*.45;
+  c.fillStyle='#10131f';c.beginPath();c.arc(px,py,er*.58,0,6.3);c.fill()}
+ if(s.name){c.fillStyle='rgba(255,255,255,.85)';c.font='600 13px system-ui';c.textAlign='center';c.fillText(s.name,h.x,h.y-r-10)}}
+function draw(t){
+ g.setTransform(DPR,0,0,DPR,0,0);
+ if(state==='menu'){
+  g.fillStyle='#070b16';g.fillRect(0,0,W,H);
+  g.save();g.translate(-(t*.025)%87,-(t*.015)%150);g.fillStyle=hexPat();g.fillRect(0,0,W+90,H+152);g.restore();
+  if(!window.ms){window.ms=[];for(let i=0;i<16;i++){const k=SKINS[i%10],s=mk(rnd(0,W),rnd(0,H),rnd(0,6.28),{a:k.a,b:k.b,p:k.p},'',true,rnd(40,110)|0);s.ph=rnd(0,9);ms.push(s)}
+   window.orbs=[];for(let i=0;i<60;i++)orbs.push({x:rnd(0,W),y:rnd(0,H),r:rnd(2,5),h:rnd(0,360)|0,v:rnd(.1,.5),p:rnd(0,9)})}
+  for(const o of orbs){o.y-=o.v;o.x+=Math.sin(t/900+o.p)*.3;if(o.y<-10){o.y=H+10;o.x=rnd(0,W)}
+   g.fillStyle='hsl('+o.h+',90%,60%)';g.globalAlpha=.25+.2*Math.sin(t/400+o.p);g.beginPath();g.arc(o.x,o.y,o.r*2.2,0,6.3);g.fill();g.globalAlpha=.9;g.beginPath();g.arc(o.x,o.y,o.r,0,6.3);g.fill()}
+  g.globalAlpha=1;
+  for(const s of ms){s.ta=s.a+Math.sin(t/600+s.ph)*1.1;
+   if(s.x<-200||s.x>W+200||s.y<-200||s.y>H+200)s.ta=Math.atan2(H/2-s.y,W/2-s.x);
+   move(s);if(Math.sin(t/1500+s.ph*3)>.8)move(s);drawSnake(s)}
+  return}
+ g.fillStyle='#05070d';g.fillRect(0,0,W,H);
+ const tz=Math.max(.45,1-(me.len-10)*.0012);cam.z+=(tz-cam.z)*.05;
+ cam.x+=(me.x-cam.x)*.2;cam.y+=(me.y-cam.y)*.2;
+ const sx=shake>.5?rnd(-shake,shake):0,sy=shake>.5?rnd(-shake,shake):0;
+ g.setTransform(DPR*cam.z,0,0,DPR*cam.z,DPR*(W/2-cam.x*cam.z+sx),DPR*(H/2-cam.y*cam.z+sy));
+ g.fillStyle='#0f1526';g.beginPath();g.arc(0,0,R,0,6.3);g.fill();
+ g.fillStyle=hexPat();g.fill();
+ g.lineWidth=26;g.strokeStyle='rgba(255,45,85,.25)';g.beginPath();g.arc(0,0,R+7,0,6.3);g.stroke();
+ g.lineWidth=10;g.strokeStyle='#ff2d55';g.stroke();
+ const hw=W/cam.z/2,hh=H/cam.z/2;
+ for(const f of food.values()){if(Math.abs(f.x-cam.x)>hw+20||Math.abs(f.y-cam.y)>hh+20)continue;
+  const pu=1+.14*Math.sin(t/220+f.x*.05+f.y*.03);g.fillStyle=f.c;g.globalAlpha=.25;g.beginPath();g.arc(f.x,f.y,f.r*2*pu,0,6.3);g.fill();g.globalAlpha=1;
+  if(f.g){g.beginPath();g.moveTo(f.x,f.y-9);g.lineTo(f.x+7,f.y);g.lineTo(f.x,f.y+9);g.lineTo(f.x-7,f.y);g.fill()}
+  else{g.beginPath();g.arc(f.x,f.y,f.r,0,6.3);g.fill()}}
+ const all=others().filter(s=>s.alive).sort((a,b)=>a.len-b.len);
+ for(const s of all){const l=s.seg.length*SP;if(Math.abs(s.x-cam.x)>hw+l||Math.abs(s.y-cam.y)>hh+l)continue;drawSnake(s)}
+ for(const q of pt){g.globalAlpha=Math.max(0,q.l/q.m);g.fillStyle=q.c;g.beginPath();g.arc(q.x,q.y,q.r,0,6.3);g.fill()}g.globalAlpha=1;
+ g.setTransform(DPR,0,0,DPR,0,0);
+ if(!dust){dust=[];for(let i=0;i<40;i++)dust.push({x:rnd(0,W),y:rnd(0,H),r:rnd(1,3),k:rnd(.3,1.2)})}
+ g.fillStyle='#fff';
+ for(const d of dust){const x=((d.x-cam.x*cam.z*d.k)%W+W)%W,y=((d.y-cam.y*cam.z*d.k)%H+H)%H;g.globalAlpha=.12+d.r*.04;g.beginPath();g.arc(x,y,d.r,0,6.3);g.fill()}
+ g.globalAlpha=1;hud(all)}
+function hud(all){
+ const lb=all.slice().sort((a,b)=>b.len-a.len).slice(0,6);
+ g.textAlign='left';g.font='700 14px system-ui';
+ g.fillStyle='rgba(10,14,28,.6)';g.fillRect(W-190,10,180,28+lb.length*20);
+ g.fillStyle='#8fa0c8';g.fillText('LEADERBOARD',W-180,30);
+ lb.forEach((s,i)=>{g.fillStyle=s===me?'#00e5ff':'#eaf0ff';g.textAlign='left';g.fillText((i+1)+'. '+(s.name||'?').slice(0,11),W-180,52+i*20);g.textAlign='right';g.fillText(Math.floor(s.len),W-18,52+i*20)});
+ g.textAlign='left';
+ const mr=58,mx=W-mr-14,my=H-mr-14;
+ g.fillStyle='rgba(10,14,28,.65)';g.beginPath();g.arc(mx,my,mr,0,6.3);g.fill();g.strokeStyle='#ff2d55';g.lineWidth=2;g.stroke();
+ for(const s of all){g.fillStyle=s===me?'#fff':s.sk.a;g.beginPath();g.arc(mx+s.x/R*mr,my+s.y/R*mr,s===me?3.5:2,0,6.3);g.fill()}}
+
+let last=0,acc=0;
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-(last||t));last=t;
+ if(state==='play'||state==='over'){acc+=dt;let n=0;while(acc>=1000/60&&n<6){step();acc-=1000/60;n++}if(n===6)acc=0}
+ draw(t);
+ if(!$('pn').classList.contains('hide')){if(panel==='shop')animCards(t);else if(panel==='edit'&&$('pv'))drawPrev(t)}}
+requestAnimationFrame(loop);
+
+/* ---------- input ---------- */
+addEventListener('mousemove',e=>{if(!joyActive){mouse.x=e.clientX;mouse.y=e.clientY}});
+cv.addEventListener('mousedown',()=>boost=true);addEventListener('mouseup',()=>boost=false);
+addEventListener('keydown',e=>{if(e.code==='Space'&&state==='play'){boost=true;e.preventDefault()}});
+addEventListener('keyup',e=>{if(e.code==='Space')boost=false});
+const joyZone=$('joyZone'),joyKnob=$('joyKnob');let joyId=null;
+function updJoy(t){const r=joyZone.getBoundingClientRect(),dx=t.clientX-(r.left+r.width/2),dy=t.clientY-(r.top+r.height/2),d=Math.min(Math.hypot(dx,dy),r.width/2);
+ joyAngle=Math.atan2(dy,dx);joyKnob.style.transform=`translate(${Math.cos(joyAngle)*d}px,${Math.sin(joyAngle)*d}px)`}
+joyZone.addEventListener('touchstart',e=>{const t=e.changedTouches[0];joyId=t.identifier;joyActive=true;updJoy(t);e.preventDefault()},{passive:false});
+joyZone.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===joyId)updJoy(t);e.preventDefault()},{passive:false});
+const endJoy=e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyId=null;joyActive=false;joyKnob.style.transform='none'}};
+joyZone.addEventListener('touchend',endJoy);joyZone.addEventListener('touchcancel',endJoy);
+$('joyBoost').addEventListener('touchstart',e=>{boost=true;e.preventDefault()},{passive:false});
+$('joyBoost').addEventListener('touchend',e=>{boost=false;e.preventDefault()},{passive:false});
+
+/* ---------- menu, servers ---------- */
+function refreshTop(){
+ $('chipP').textContent=SV.av+' '+SV.name;$('chipC').textContent='🪙 '+Math.floor(SV.coins)+'   💎 '+SV.gems;
+ $('best').textContent='Best: '+SV.best+' · Steer: mouse/joystick · Boost: click / Space / button';
+ $('bDaily').textContent=SV.daily===new Date().toDateString()?'🎁 Daily reward claimed':'🎁 Daily reward +100🪙 +1💎'}
+$('bSolo').onclick=startSolo;
+$('bServers').onclick=()=>{show('menu',0);show('serverp',1);lobbyMsg('Connecting…');
+ netOpen(()=>{const ask=()=>tx({t:'get_rooms'});ask();clearInterval(lobbyT);lobbyT=setInterval(ask,3000)})};
+$('sBack').onclick=()=>{clearInterval(lobbyT);if(ws){const w=ws;ws=null;w.close()}show('serverp',0);show('menu',1)};
+$('bCreate').onclick=()=>netOpen(()=>{clearInterval(lobbyT);tx({t:'create_room',name:($('customName').value||'Custom Server').trim(),n:myName(),sk:mySkin()})});
+$('bDaily').onclick=()=>{const d=new Date().toDateString();if(SV.daily===d)return toast('Come back tomorrow!');SV.daily=d;SV.coins+=100;SV.gems+=1;save();toast('+100 🪙 +1 💎')};
+
+/* ---------- panels: shop, skins, editor, profile, redeem ---------- */
+let shopTab='skins',revId=null,panel='',ed={id:null,n:'My skin',a:'#ff00aa',b:'#220044',p:'stripe'},tmpAv='🐍';
+function openP(n){panel=n;$('pn').firstElementChild.classList.toggle('wide',n==='shop');show('menu',0);show('pn',1);$('pt').textContent={shop:'SHOP',skins:'MY SKINS',prof:'PROFILE',red:'REDEEM',edit:'SKIN EDITOR'}[n];renderP()}
+$('bShop').onclick=()=>openP('shop');$('bSkins').onclick=()=>openP('skins');
+$('bProf').onclick=()=>{tmpAv=SV.av;openP('prof')};$('bRed').onclick=()=>openP('red');
+$('pBack').onclick=()=>{if(panel==='edit')openP('skins');else{show('pn',0);show('menu',1);refreshTop()}};
+const row=(k,m)=>{const own=SV.owned.includes(k.id),sel=SV.sel===k.id;
+ const btn=(m==='shop'&&!own)?`<button data-a="buy" data-v="${k.id}">${k.gm?'💎 '+k.gm:'🪙 '+k.pr}</button>`:`<button class="${sel?'g':''}" data-a="eq" data-v="${k.id}">${sel?'✔ On':'Equip'}</button>`;
+ const ex=m==='skins'&&k.id[0]==='c'?`<button class="d" data-a="edit" data-v="${k.id}">✎</button><button class="d" data-a="del" data-v="${k.id}">🗑</button>`:'';
+ return `<div class="it"><div class="pv" style="background:linear-gradient(90deg,${k.a},${k.b})"></div><b>${esc(k.n)}</b>${ex}${btn}</div>`};
+function drawPrev(t){const c=$('pv').getContext('2d');c.clearRect(0,0,260,80);
+ const s={seg:[],sk:{a:ed.a,b:ed.b,p:ed.p},r:11,len:34,a:0,ta:0,boost:false,name:''};
+ for(let i=0;i<34;i++)s.seg.push({x:235-i*6,y:40+Math.sin(i*.35-(t||0)/260)*14});drawSnake(s,c)}
+const BOXES=[{id:'b1',n:'Mystery Box',c:300,cur:'c',ic:'📦',rc:'#3fa9ff',d:'Random skin you do not own'},{id:'b2',n:'Mega Box',c:900,cur:'c',ic:'🎁',rc:'#b44cff',d:'Rare or better skin'},{id:'b3',n:'Gem Chest',c:12,cur:'g',ic:'💎',rc:'#ffb300',d:'Random premium skin'}];
+const sCard=k=>{const [rn,rc]=RAR(k),own=SV.owned.includes(k.id),sel=SV.sel===k.id;
+ const btn=own?`<button class="${sel?'g':''}" data-a="eq" data-v="${k.id}">${sel?'✔ Equipped':'Equip'}</button>`:`<button data-a="buy" data-v="${k.id}">${k.gm?'💎 '+k.gm:'🪙 '+k.pr}</button>`;
+ return `<div class="sc" style="--rc:${rc}"><div class="rb">${rn}</div><canvas class="pc" data-id="${k.id}" width="260" height="150"></canvas><div class="nm2">${esc(k.n)}</div>${btn}</div>`};
+const bCard=b=>`<div class="sc" style="--rc:${b.rc}"><div class="rb">Box</div><div style="font-size:84px;line-height:150px">${b.ic}</div><div class="nm2">${b.n}</div><div class="sub">${b.d}</div><button data-a="box" data-v="${b.id}">${b.cur==='g'?'💎 ':'🪙 '}${b.c}</button></div>`;
+function shopHTML(){
+ if(revId){const k=skinOf(revId),[rn,rc]=RAR(k);return `<div class="sc" style="--rc:${rc};margin:0 auto;max-width:300px"><div class="rb">${rn}</div><canvas class="pc" data-id="${k.id}" width="260" height="150"></canvas><div class="nm2">${esc(k.n)}</div><div class="sub">Unlocked and equipped!</div><button data-a="ok">Awesome!</button></div>`}
+ const tabs=[['skins','🎨 Skins'],['prem','💎 Premium'],['box','🎁 Boxes']].map(t=>`<button class="${shopTab===t[0]?'g':'x'}" data-a="tab" data-v="${t[0]}">${t[1]}</button>`).join('');
+ const cards=shopTab==='box'?BOXES.map(bCard).join(''):SKINS.filter(k=>shopTab==='prem'?k.gm:!k.gm).map(sCard).join('');
+ return `<div class="cur">🪙 ${Math.floor(SV.coins)} &nbsp; 💎 ${SV.gems}</div><div class="tabs">${tabs}</div><div class="carw"><button class="arr" style="left:-8px" data-a="sl" data-v="-1">◀</button><div class="car" id="car">${cards}</div><button class="arr" style="right:-8px" data-a="sl" data-v="1">▶</button></div><div class="info">Swipe left / right</div>`}
+function animCards(t){document.querySelectorAll('canvas.pc').forEach(cn=>{const r=cn.getBoundingClientRect();if(r.right<0||r.left>innerWidth)return;
+ const k=skinOf(cn.dataset.id),c=cn.getContext('2d');c.clearRect(0,0,260,150);
+ const s={seg:[],sk:{a:k.a,b:k.b,p:k.p},r:15,len:36,a:0,ta:0,boost:false,name:''};
+ for(let i=0;i<36;i++)s.seg.push({x:215-i*5.6,y:75+Math.sin(i*.3-t/260)*20});drawSnake(s,c)})}
+function openBox(id){const b=BOXES.find(x=>x.id===id);
+ if(b.cur==='g'?SV.gems<b.c:SV.coins<b.c)return toast('Not enough '+(b.cur==='g'?'gems 💎':'coins 🪙'));
+ let pool=SKINS.filter(k=>!SV.owned.includes(k.id)&&(id==='b3'?k.gm:!k.gm));
+ if(id==='b2'){const p2=pool.filter(k=>RAR(k)[0]!=='Common');if(p2.length)pool=p2}
+ if(!pool.length)return toast('You already own every skin in this box!');
+ if(b.cur==='g')SV.gems-=b.c;else SV.coins-=b.c;
+ const k=pool[Math.random()*pool.length|0];SV.owned.push(k.id);SV.sel=k.id;save();revId=k.id;renderP()}
+let drag=null;
+addEventListener('mousemove',e=>{if(drag)drag.c.scrollLeft=drag.sl-(e.pageX-drag.sx)});
+addEventListener('mouseup',()=>{if(drag){drag.c.style.scrollSnapType='';drag=null}});
+function bindShop(){const c=$('car');if(c)c.onmousedown=e=>{if(e.target.closest('button'))return;drag={c,sx:e.pageX,sl:c.scrollLeft};c.style.scrollSnapType='none'}}
+function renderP(){const b=$('pb'),sl0=$('car')?$('car').scrollLeft:0;let h='';
+ if(panel==='shop')h=shopHTML();
+ else if(panel==='skins')h=SKINS.concat(SV.custom).filter(k=>SV.owned.includes(k.id)).map(k=>row(k,'skins')).join('')+(SV.custom.length<8?'<button data-a="new">➕ Create custom skin</button>':'');
+ else if(panel==='edit')h=`<canvas id="pv" width="260" height="80" style="max-width:100%"></canvas><input id="en" maxlength="14" value="${esc(ed.n)}" placeholder="Skin name"><div class="row"><input id="ea" type="color" value="${ed.a}"><input id="eb" type="color" value="${ed.b}"></div><select id="ep">${['dash','stripe','dot','rainbow'].map(p=>`<option value="${p}"${p===ed.p?' selected':''}>${p}</option>`).join('')}</select><button data-a="saveSkin">💾 Save skin</button>`;
+ else if(panel==='prof')h=`<input id="pfn" maxlength="14" value="${esc(SV.name)}" placeholder="Nickname"><div>${AV.map(a=>`<span class="av${a===tmpAv?' on':''}" data-a="av" data-v="${a}">${a}</span>`).join('')}</div><button data-a="saveProf">Save profile</button><div class="info">Saved on this device only · no account needed</div>`;
+ else if(panel==='red')h=`<input id="rc" placeholder="ENTER CODE" style="text-transform:uppercase"><button data-a="redeem">Redeem</button><div class="info" id="rm"></div>`;
+ b.innerHTML=h;if(panel==='shop'){bindShop();if($('car'))$('car').scrollLeft=sl0}
+ if(panel==='edit'){drawPrev();for(const [id,k] of [['ea','a'],['eb','b'],['ep','p'],['en','n']])$(id).oninput=e=>{ed[k]=e.target.value;if(k!=='n')drawPrev()}}}
+$('pb').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;const a=el.dataset.a,v=el.dataset.v;
+ if(a==='buy'){const k=skinOf(v);
+  if(k.gm){if(SV.gems<k.gm)return toast('Not enough gems 💎');SV.gems-=k.gm}else{if(SV.coins<k.pr)return toast('Not enough coins 🪙');SV.coins-=k.pr}
+  SV.owned.push(k.id);SV.sel=k.id;save();revId=k.id;renderP()}
+ else if(a==='tab'){shopTab=v;if($('car'))$('car').scrollLeft=0;renderP()}
+ else if(a==='sl'){$('car').scrollBy({left:v*290,behavior:'smooth'})}
+ else if(a==='ok'){revId=null;renderP()}
+ else if(a==='box')openBox(v);
+ else if(a==='eq'){SV.sel=v;save();renderP()}
+ else if(a==='new'){ed={id:null,n:'My skin',a:'#ff00aa',b:'#220044',p:'stripe'};openP('edit')}
+ else if(a==='edit'){ed=Object.assign({},skinOf(v));openP('edit')}
+ else if(a==='del'){SV.custom=SV.custom.filter(k=>k.id!==v);SV.owned=SV.owned.filter(x=>x!==v);if(SV.sel===v)SV.sel='s0';save();renderP()}
+ else if(a==='saveSkin'){const id=ed.id||('c'+Date.now()),k=K(id,(ed.n||'My skin').trim().slice(0,14),ed.a,ed.b,ed.p,0);
+  const i=SV.custom.findIndex(x=>x.id===id);if(i<0){SV.custom.push(k);SV.owned.push(id)}else SV.custom[i]=k;SV.sel=id;save();toast('Skin saved & equipped');openP('skins')}
+ else if(a==='av'){tmpAv=v;document.querySelectorAll('.av').forEach(x=>x.classList.toggle('on',x.dataset.v===v))}
+ else if(a==='saveProf'){SV.name=($('pfn').value.trim()||SV.name).slice(0,14);SV.av=tmpAv;save();toast('Profile saved')}
+ else if(a==='redeem'){const c=$('rc').value.trim().toUpperCase(),d=CODES[c];
+  if(!d)return $('rm').textContent='Invalid code';if(SV.codes.includes(c))return $('rm').textContent='Code already used';
+  SV.codes.push(c);SV.coins+=d.c||0;SV.gems+=d.g||0;save();$('rm').textContent='Redeemed! '+(d.c?'+'+d.c+' 🪙 ':'')+(d.g?'+'+d.g+' 💎':'');$('rc').value=''}};
+refreshTop();
+let wl=null;async function keepAwake(){try{if(navigator.wakeLock)wl=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state==='play')keepAwake()});
+addEventListener('contextmenu',e=>e.preventDefault());
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script></body></html>
