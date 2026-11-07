@@ -1,0 +1,12 @@
+{
+  "name": "slither-arena",
+  "version": "1.0.0",
+  "description": "Slither Arena Online",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
